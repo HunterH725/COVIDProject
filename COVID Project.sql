@@ -44,10 +44,9 @@ GROUP BY continent
 ORDER BY TotalDeathCount desc
 
 -- Global numbers
-SELECT date,SUM(new_cases) as TotalCases,SUM(cast(new_deaths as int)) as TotalDeaths, (SUM(cast(new_deaths as int))/SUM(new_cases))*100 as DeathPercentage
+SELECT SUM(new_cases) as TotalCases,SUM(cast(new_deaths as int)) as TotalDeaths, (SUM(cast(new_deaths as int))/SUM(new_cases))*100 as DeathPercentage
 FROM PortfolioProject..CovidDeaths$
 WHERE continent is not null
-GROUP BY date
 ORDER BY 1,2
 
 -- Look at total population vs vaccination
@@ -111,3 +110,57 @@ WHERE dea.continent is not null
 
 SELECT *
 FROM PercentPopulationVaccinated
+
+-- 1. 
+
+SELECT SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+FROM PortfolioProject..CovidDeaths$
+--Where location like '%states%'
+WHERE continent is not null 
+--Group By date
+ORDER BY 1,2
+
+-- 2. 
+
+-- We take these out as they are not inluded in the above queries and want to stay consistent
+-- European Union is part of Europe
+
+SELECT location, SUM(cast(new_deaths as int)) as TotalDeathCount
+FROM PortfolioProject..CovidDeaths$
+--Where location like '%states%'
+Where continent is null 
+and location not in ('World', 'European Union', 'International')
+GROUP BY location
+ORDER BY TotalDeathCount desc
+
+
+-- 3.
+
+SELECT Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+FROM PortfolioProject..CovidDeaths$
+--Where location like '%states%'
+GROUP BY Location, Population
+ORDER BY PercentPopulationInfected desc
+
+
+-- 4.
+
+
+SELECT Location, Population,date, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+FROM PortfolioProject..CovidDeaths$
+--Where location like '%states%'
+GROUP BY Location, Population, date
+ORDER BY PercentPopulationInfected DESC
+
+-- Extra queries
+
+-- Date and new cases for specific location
+SELECT CovidVaccinations$.date, CovidDeaths$.new_cases
+FROM PortfolioProject..CovidVaccinations$
+JOIN PortfolioProject..CovidDeaths$ ON CovidVaccinations$.location = CovidDeaths$.location AND CovidVaccinations$.date = CovidDeaths$.date
+WHERE CovidVaccinations$.location = 'Afghanistan'
+
+-- Total deaths and population for every location
+SELECT CovidDeaths$.location, CovidDeaths$.total_deaths, CovidDeaths$.population
+FROM PortfolioProject..CovidDeaths$
+WHERE total_deaths is not null
